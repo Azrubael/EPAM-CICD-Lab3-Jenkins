@@ -1,6 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+
 Vagrant.configure("2") do |config|
   
   ### ----- Silver vm ----- Should start first
@@ -19,6 +20,7 @@ Vagrant.configure("2") do |config|
     silver.vm.provision "shell", path: "scripts/silver-setup.sh"  
   end
   
+
   ### ----- Merlin vm ----- Should start first
   config.vm.define "merlin" do |merlin|
     merlin.vm.box = "ubuntu/focal64"
@@ -34,6 +36,5 @@ Vagrant.configure("2") do |config|
     merlin.vm.provision "file", source: ".env/mkey", destination: "/tmp/mkey"
     merlin.vm.provision "shell", path: "scripts/merlin-setup.sh"  
   end
-  
   
 end
