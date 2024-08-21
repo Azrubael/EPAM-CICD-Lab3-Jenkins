@@ -3,4 +3,4 @@
 .env/*
 env_local/*
 
-**/ubuntu-bionic-18.04-cloudimg-console.log
+ubuntu-bionic-18.04-cloudimg-console.log
