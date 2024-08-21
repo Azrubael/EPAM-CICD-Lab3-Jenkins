@@ -1,5 +1,5 @@
 pipeline {
-    agent { label "linux" }
+    agent { label "SILVER" }
     options {
         // Configure build discarding
         buildDiscarder logRotator(
