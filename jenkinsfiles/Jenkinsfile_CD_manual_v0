@@ -1,0 +1,80 @@
+pipeline {
+    agent any
+
+    environment {
+        // Define the environment variables based on the branch
+        ACCESS_PORT = ''
+        IMAGE_TAG = ''
+    }
+
+    parameters {
+        // Input parameter for selecting the Git branch
+        choice(name: 'GIT_BRANCH', choices: ['main', 'dev'], description: 'Select the branch to deploy')
+    }
+
+    stages {
+        stage('Set Environment Variables') {
+            steps {
+                script {
+                    // Set the environment variables based on the selected branch
+                    if (params.GIT_BRANCH == 'main') {
+                        env.ACCESS_PORT = '3000'
+                        env.IMAGE_TAG = 'nodemain'
+                    } else if (params.GIT_BRANCH == 'dev') {
+                        env.ACCESS_PORT = '3001'
+                        env.IMAGE_TAG = 'nodedev'
+                    }
+                }
+            }
+        }
+
+        stage('Fetch Code') {
+            steps {
+                // Pull the Node.js project from the Git repository
+                git url: 'git@github.com:Azrubael/EPAM-CICD-Lab3-Jenkins.git', branch: params.GIT_BRANCH
+            }
+        }
+
+        stage('Node Build') {
+            steps {
+                // Build the Node.js project
+                sh '''
+                    npm install
+                    npm run build
+                '''
+            }
+        }
+
+        stage('Test') {
+            steps {
+                // Run tests for the Node.js project
+                sh 'npm test'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                // Build the Docker image
+                sh "docker build -t ${IMAGE_TAG}:v1.0 ."
+            }
+        }
+
+        stage('Docker Run') {
+            steps {
+                // Run the Docker image
+                sh "docker run -d --expose ${ACCESS_PORT} -p ${ACCESS_PORT}:3000 ${IMAGE_TAG}:v1.0"
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up actions or notifications can go here
+            echo 'Pipeline execution completed.'
+        }
+        failure {
+            // Notify or handle failures if needed
+            echo 'Pipeline failed!'
+        }
+    }
+}
