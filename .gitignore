@@ -1,6 +1,6 @@
-**/.vagrant
+.vagrant/
 
-.env/*         # directory with ssh keys
+.env/*
 env_local/*
 
 **/ubuntu-bionic-18.04-cloudimg-console.log
