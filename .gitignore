@@ -1,4 +1,4 @@
-**/.vagrant
+.vagrant/
 
 .env/*
 env_local/*
