@@ -1,3 +1,6 @@
+// This is the variant with Docker images removing before building
+// And for setting the value of GIT_BRANCH in some another place
+
 pipeline {
     agent { label "SILVER" }
 
@@ -31,7 +34,7 @@ pipeline {
         stage('Fetch Code') {
             steps {
                 // Pull the Node.js project from the Git repository
-                git url: 'git@github.com:Azrubael/EPAM-CICD-Lab3-Jenkins.git', branch: params.GIT_BRANCH
+                git url: 'https://github.com/Azrubael/EPAM-CICD-Lab3-Jenkins.git', branch: params.GIT_BRANCH
             }
         }
 
