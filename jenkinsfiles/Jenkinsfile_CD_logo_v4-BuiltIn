@@ -1,0 +1,123 @@
+// This is the properly tested variant of CD pipeline
+// to run it manually or by the schedule
+// With custom logos
+
+pipeline {
+    agent { label "BuiltIn" }
+
+    environment {
+        // Define the environment variables based on the branch
+        ACCESS_PORT = ''
+        IMAGE_TAG = ''
+        JENKINS_LOGO = ''
+    }
+
+    stages {
+        stage('Set Environment Variables') {
+            steps {
+                script {
+                    if (env.GIT_BRANCH == 'main') {
+                        ACCESS_PORT = '3000'
+                        IMAGE_TAG = 'nodemain'
+                        JENKINS_LOGO = 'icons/main.svg'
+                    } else if (env.GIT_BRANCH == 'dev') {
+                        ACCESS_PORT = '3001'
+                        IMAGE_TAG = 'nodedev'
+                        JENKINS_LOGO = 'icons/dev.svg'
+                    } else {
+                        error("Unsupported branch: ${env.GIT_BRANCH}.")
+                    }
+                }
+            }
+        }
+
+
+        stage('Change Jenkins Logo') {
+            steps {
+                script {
+                    // Change the Jenkins logo using the Jenkins CLI or REST API
+                    // Ensure you have the necessary permissions and settings on your Jenkins instance
+                    def logoChangeScript = """
+                        import jenkins.model.*
+                        def instance = Jenkins.getInstance()
+                        instance.setSystemMessage("My awesome message") // Optional
+                        instance.getDescriptorByType(jenkins.model.JenkinsLocationConfiguration.class).setLogo(JENKINS_LOGO)
+                        instance.save()
+                    """
+                    // Execute the script
+                    sh "java -jar jenkins-cli.jar -s http://localhost:8080/ groovy = <<EOF\n${logoChangeScript}\nEOF"
+                }
+            }
+        }
+
+        stage('Status Check') {
+            steps {
+                echo "Status chek >>> ACCESS_PORT = ${ACCESS_PORT}"
+                echo "Status chek >>> IMAGE_TAG = ${IMAGE_TAG}"
+            }
+        }
+
+        stage('Fetch Code') {
+            steps {
+                // Pull the Node.js project from the Git repository
+                git url: 'https://github.com/Azrubael/EPAM-CICD-Lab3-Jenkins.git', branch: env.GIT_BRANCH
+            }
+        }
+
+        stage('Node Build') {
+            steps {
+                // Build the Node.js project
+                sh '''
+                    npm install
+                    npm run build
+                '''
+            }
+        }
+
+        stage('Test') {
+            steps {
+                // Run tests for the Node.js project
+                sh 'npm test'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                // Build the Docker image
+                sh "docker build -t ${IMAGE_TAG}:v1.0 ."
+            }
+        }
+
+        stage('Manage Docker Containers') {
+            steps {
+                script {
+                    // Stop and remove any previously running containers
+                    def containerId = sh(script: "docker ps -q --filter 'ancestor=${IMAGE_TAG}:v1.0'", returnStdout: true).trim()
+                    if (containerId) {
+                        sh "docker stop ${containerId}"
+                        sh "docker rm ${containerId}"
+                    }
+                }
+            }
+        }
+
+        stage('Docker Run') {
+            steps {
+                // Run the Docker image in detached mode with port mapping
+                // Using --restart unless-stopped to minimize downtime
+                sh "docker run -d --restart unless-stopped -p ${ACCESS_PORT}:3000 ${IMAGE_TAG}:v1.0"
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up actions or notifications can go here
+            echo 'Pipeline execution completed.'
+        }
+        failure {
+            // Notify or handle failures if needed
+            echo 'Pipeline failed!'
+        }
+    }
+}
