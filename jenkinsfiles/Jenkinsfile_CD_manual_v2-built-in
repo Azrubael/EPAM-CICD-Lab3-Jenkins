@@ -1,5 +1,5 @@
 pipeline {
-    agent { label "SILVER" }
+    agent { label "Built-In Node" }
 
     environment {
         // Define the environment variables based on the branch
@@ -7,31 +7,34 @@ pipeline {
         IMAGE_TAG = ''
     }
 
-    parameters {
-        // Input parameter for selecting the Git branch
-        choice(name: 'GIT_BRANCH', choices: ['main', 'dev'], description: 'Select the branch to deploy')
-    }
-
     stages {
         stage('Set Environment Variables') {
             steps {
                 script {
-                    // Set the environment variables based on the selected branch
-                    if (params.GIT_BRANCH == 'main') {
-                        env.ACCESS_PORT = '3000'
-                        env.IMAGE_TAG = 'nodemain'
-                    } else if (params.GIT_BRANCH == 'dev') {
-                        env.ACCESS_PORT = '3001'
-                        env.IMAGE_TAG = 'nodedev'
+                    if (env.GIT_BRANCH == 'main') {
+                        ACCESS_PORT = '3000'
+                        IMAGE_TAG = 'nodemain'
+                    } else if (env.GIT_BRANCH == 'dev') {
+                        ACCESS_PORT = '3001'
+                        IMAGE_TAG = 'nodedev'
+                    } else {
+                        error("Unsupported branch: ${env.GIT_BRANCH}.")
                     }
                 }
+            }
+        }
+
+        stage('Status chek') {
+            steps {
+                echo "Status chek >>> ACCESS_PORT = ${ACCESS_PORT}"
+                echo "Status chek >>> IMAGE_TAG = ${IMAGE_TAG}"
             }
         }
 
         stage('Fetch Code') {
             steps {
                 // Pull the Node.js project from the Git repository
-                git url: 'git@github.com:Azrubael/EPAM-CICD-Lab3-Jenkins.git', branch: params.GIT_BRANCH
+                git url: 'git@github.com:Azrubael/EPAM-CICD-Lab3-Jenkins.git', branch: env.GIT_BRANCH
             }
         }
 
