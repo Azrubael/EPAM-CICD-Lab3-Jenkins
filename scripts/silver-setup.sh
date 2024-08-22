@@ -51,6 +51,7 @@ if docker version &> /dev/null; then
     echo "I        Docker         I"
     echo $LINE
     sudo usermod -aG docker vagrant
+    sudo usermod -aG docker jenkins
 else
     echo "---------- Docker doesn't work! ----------"
 fi
