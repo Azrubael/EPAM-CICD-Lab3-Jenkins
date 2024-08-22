@@ -2,7 +2,7 @@
 // And for setting the value of GIT_BRANCH in some another place
 
 pipeline {
-    agent { label "SILVER" }
+    agent any
 
     environment {
         // Define the environment variables based on the branch
