@@ -35,17 +35,19 @@ pipeline {
         stage('Change Jenkins Logo') {
             steps {
                 script {
-                    // Change the Jenkins logo using the Jenkins CLI or REST API
-                    // Ensure you have the necessary permissions and settings on your Jenkins instance
+// Change the Jenkins logo using the Jenkins CLI or REST API
+// Ensure the necessary permissions and settings on Jenkins instance
                     def logoChangeScript = """
                         import jenkins.model.*
                         def instance = Jenkins.getInstance()
-                        instance.setSystemMessage("My awesome message") // Optional
-                        instance.getDescriptorByType(jenkins.model.JenkinsLocationConfiguration.class).setLogo(JENKINS_LOGO)
+                        instance.setSystemMessage("My awesome message")
+                        instance.getDescriptorByType(jenkins.model.JenkinsLocationConfiguration.class).setLogo("${JENKINS_LOGO}")
                         instance.save()
                     """
-                    // Execute the script
+                    // http://192.168.56.20:8080/jnlpJars/jenkins-cli.jar
+                    sh "curl -O 'http://localhost:8080/jnlpJars/jenkins-cli.jar'"
                     sh "java -jar jenkins-cli.jar -s http://localhost:8080/ groovy = <<EOF\n${logoChangeScript}\nEOF"
+
                 }
             }
         }
