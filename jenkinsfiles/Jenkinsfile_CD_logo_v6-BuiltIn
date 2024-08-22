@@ -45,7 +45,8 @@ pipeline {
                         instance.save()
                     """
                     // http://192.168.56.20:8080/jnlpJars/jenkins-cli.jar
-                    sh "java -jar libs/jenkins-cli.jar -s http://localhost:8080/ groovy = <<EOF\n${logoChangeScript}\nEOF"
+                    sh "curl -O 'http://localhost:8080/jnlpJars/jenkins-cli.jar'"
+                    sh "java -jar jenkins-cli.jar -s http://localhost:8080/ groovy = <<EOF\n${logoChangeScript}\nEOF"
 
                 }
             }
