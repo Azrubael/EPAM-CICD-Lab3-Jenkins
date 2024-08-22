@@ -2,7 +2,7 @@
 // to run it manually or by the schedule
 
 pipeline {
-    agent { label "BuiltIn" }
+    agent { label "SILVER" }
 
     environment {
         // Define the environment variables based on the branch
@@ -82,7 +82,7 @@ pipeline {
             steps {
                 // Run the Docker image in detached mode with port mapping
                 // Using --restart unless-stopped to minimize downtime
-                sh "docker run -d --restart unless-stopped --expose ${ACCESS_PORT} -p ${ACCESS_PORT}:3000 ${IMAGE_TAG}:v1.0"
+                sh "docker run -d --restart unless-stopped --expose 3000 -p 3000:${ACCESS_PORT} ${IMAGE_TAG}:v1.0"
             }
         }
     }
