@@ -36,7 +36,7 @@ Vagrant.configure("2") do |config|
     end
     merlin.vm.provision "file", source: ".env/mkey", destination: "/tmp/mkey"
     merlin.vm.provision "shell", path: "scripts/merlin-setup.sh"
-    silver.vm.provision "shell", path: "scripts/nodejs-setup.sh"
+    merlin.vm.provision "shell", path: "scripts/nodejs-setup.sh"
   end
   
 end
