@@ -17,7 +17,8 @@ Vagrant.configure("2") do |config|
       ubuntu18.customize ["modifyvm", :id, "--vram", "16"]
     end
     silver.vm.provision "file", source: ".env/mkey.pub", destination: "/tmp/mkey.pub"
-    silver.vm.provision "shell", path: "scripts/silver-setup.sh"  
+    silver.vm.provision "shell", path: "scripts/silver-setup.sh"
+    silver.vm.provision "shell", path: "scripts/nodejs-setup.sh"
   end
   
 
@@ -34,7 +35,8 @@ Vagrant.configure("2") do |config|
       ubuntu20.customize ["modifyvm", :id, "--vram", "16"]
     end
     merlin.vm.provision "file", source: ".env/mkey", destination: "/tmp/mkey"
-    merlin.vm.provision "shell", path: "scripts/merlin-setup.sh"  
+    merlin.vm.provision "shell", path: "scripts/merlin-setup.sh"
+    silver.vm.provision "shell", path: "scripts/nodejs-setup.sh"
   end
   
 end
