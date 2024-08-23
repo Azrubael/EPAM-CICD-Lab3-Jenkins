@@ -62,14 +62,13 @@ pipeline {
         stage('Manage Docker Containers and Images') {
             steps {
                 script {
-                    // I'm not sure if it works
                     def containerId = sh(script: "docker ps -q --filter ancestor=${IMAGE_NAME}", returnStdout: true).trim()
-                    if (containerId) {
+                    if (containerId) {       // I'm not sure if it works
                         sh "docker stop ${containerId}"
                         sh "docker rm ${containerId}"
                     }
 
-                    def is_running = sh(script: "docker ps --filter name=${CONTAINER_TAG}"), returnStdout: true).trim()
+                    def is_running = sh(script: "docker ps --filter name=${CONTAINER_TAG}", returnStdout: true).trim()
                     def is_container = sh(script: "docker ps -a --filter name=${CONTAINER_TAG}", returnStdout: true).trim()
                     def is_image = sh(script: "docker images --filter reference=${IMAGE_NAME}", returnStdout: true).trim()
                     if (is_running) {
