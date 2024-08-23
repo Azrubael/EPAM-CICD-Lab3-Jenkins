@@ -1,14 +1,15 @@
 // This is the properly tested variant of CD pipeline
 // to run it manually or by the schedule
+// With custom logos
 
 pipeline {
     agent { label "BuiltIn" }
 
     environment {
-        CONTAINER_PORT='3000'
+        // Define the environment variables based on the branch
         ACCESS_PORT = ''
         IMAGE_TAG = ''
-        CONTAINER_TAG = ''
+        JENKINS_LOGO = ''
     }
 
     stages {
@@ -18,34 +19,55 @@ pipeline {
                     if (env.GIT_BRANCH == 'main') {
                         ACCESS_PORT = '3000'
                         IMAGE_TAG = 'nodemain'
-                        CONTAINER_TAG = 'app-main-container'
+                        JENKINS_LOGO = 'icons/main.svg'
                     } else if (env.GIT_BRANCH == 'dev') {
                         ACCESS_PORT = '3001'
                         IMAGE_TAG = 'nodedev'
-                        CONTAINER_TAG = 'app-dev-container'
+                        JENKINS_LOGO = 'icons/dev.svg'
                     } else {
                         error("Unsupported branch: ${env.GIT_BRANCH}.")
                     }
-                    IMAGE_NAME = "${IMAGE_TAG}:v1.0"
                 }
             }
         }
 
-        stage('Status check') {
+
+        stage('Change Jenkins Logo') {
             steps {
-                echo "Status check >>> ACCESS_PORT = ${ACCESS_PORT}"
-                echo "Status check >>> IMAGE_TAG = ${IMAGE_TAG}"
+                script {
+// Change the Jenkins logo using the Jenkins CLI or REST API
+// Ensure the necessary permissions and settings on Jenkins instance
+                    sh """
+                    curl -O 'http://localhost:8080/jnlpJars/jenkins-cli.jar'
+                    java -jar jenkins-cli.jar -s http://localhost:8080/ groovy = <<EOF
+                    import jenkins.model.*
+                    def instance = Jenkins.getInstance()
+                    instance.setSystemMessage("My awesome message")
+                    instance.getDescriptorByType(jenkins.model.JenkinsLocationConfiguration.class).setLogo(${JENKINS_LOGO})
+                    instance.save()
+                    EOF
+                    """
+                }
+            }
+        }
+
+        stage('Status Check') {
+            steps {
+                echo "Status chek >>> ACCESS_PORT = ${ACCESS_PORT}"
+                echo "Status chek >>> IMAGE_TAG = ${IMAGE_TAG}"
             }
         }
 
         stage('Fetch Code') {
             steps {
+                // Pull the Node.js project from the Git repository
                 git url: 'https://github.com/Azrubael/EPAM-CICD-Lab3-Jenkins.git', branch: env.GIT_BRANCH
             }
         }
 
         stage('Node Build') {
             steps {
+                // Build the Node.js project
                 sh '''
                     npm install
                     npm run build
@@ -55,45 +77,28 @@ pipeline {
 
         stage('Test') {
             steps {
+                // Run tests for the Node.js project
                 sh 'npm test'
-            }
-        }
-
-<<<<<<< HEAD
-        stage('Manage Docker Containers and Images') {
-            steps {
-                script {
-                    def containerId = sh(script: "docker ps -q --filter ancestor=${IMAGE_NAME}", returnStdout: true).trim()
-                    if (containerId) {
-                        echo "Stopping and removing running container: ${containerId}"
-                        sh "docker stop ${containerId}"
-                        sh "docker rm ${containerId}"
-                    }
-
-                    def is_running = sh(script: "docker ps --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
-                    if (is_running) {
-                        echo "$is_running"
-                        sh "docker stop ${CONTAINER_TAG}"
-                    }
-
-                    def is_container = sh(script: "docker ps -a --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
-                    if (is_container) {
-                        echo "Removing container: ${CONTAINER_TAG}"
-                        sh "docker rm ${CONTAINER_TAG}"
-                    }
-
-                    def is_image = sh(script: "docker images --filter reference=${IMAGE_NAME} -q", returnStdout: true).trim()
-                    if (is_image) {
-                        echo "Removing image: ${IMAGE_NAME}"
-                        sh "docker rmi ${IMAGE_NAME}"
-                    }
-                }
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${IMAGE_NAME} ."
+                // Build the Docker image
+                sh "docker build -t ${IMAGE_TAG}:v1.0 ."
+            }
+        }
+
+        stage('Manage Docker Containers') {
+            steps {
+                script {
+                    // Stop and remove any previously running containers
+                    def containerId = sh(script: "docker ps -q --filter 'ancestor=${IMAGE_TAG}:v1.0'", returnStdout: true).trim()
+                    if (containerId) {
+                        sh "docker stop ${containerId}"
+                        sh "docker rm ${containerId}"
+                    }
+                }
             }
         }
 
@@ -101,7 +106,7 @@ pipeline {
             steps {
                 // Run the Docker image in detached mode with port mapping
                 // Using --restart unless-stopped to minimize downtime
-                sh "docker run -d --restart unless-stopped --name ${CONTAINER_TAG} -p ${ACCESS_PORT}:${CONTAINER_PORT} ${IMAGE_NAME}"
+                sh "docker run -d --restart unless-stopped -p ${ACCESS_PORT}:3000 ${IMAGE_TAG}:v1.0"
             }
         }
     }
