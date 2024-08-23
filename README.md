@@ -18,3 +18,5 @@ http://192.168.56.20:8080
 [3] - Check if the containerf are working on BuiltIn node:
 http://192.168.56.20:3000
 http://192.168.56.20:3001
+
+You should know: the 'SILVER' node operates by 'silver' user with 'SILVER_ID' global token in Jenkins.
