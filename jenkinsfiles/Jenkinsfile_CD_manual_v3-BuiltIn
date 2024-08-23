@@ -84,7 +84,7 @@ pipeline {
                     def is_image = sh(script: "docker images --filter reference=${IMAGE_NAME} -q", returnStdout: true).trim()
                     if (is_image) {
                         echo "Removing image: ${IMAGE_NAME}"
-                        sh "docker rmi ${IMAGE_NAMe}"
+                        sh "docker rmi ${IMAGE_NAME}"
                     }
                 }
             }
@@ -92,7 +92,7 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${IMAGE_TAG}:v1.0 ."
+                sh "docker build -t ${IMAGE_NAME} ."
             }
         }
 
@@ -101,7 +101,7 @@ pipeline {
             steps {
                 // Run the Docker image in detached mode with port mapping
                 // Using --restart unless-stopped to minimize downtime
-                sh "docker run -d --restart unless-stopped --name ${CONTAINER_TAG} -p ${ACCESS_PORT}:${CONTAINER_PORT} ${IMAGE_TAG}:v1.0"
+                sh "docker run -d --restart unless-stopped --name ${CONTAINER_TAG} -p ${ACCESS_PORT}:${CONTAINER_PORT} ${IMAGE_NAME}"
             }
         }
     }
