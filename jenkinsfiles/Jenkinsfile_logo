@@ -45,7 +45,7 @@ pipeline {
             // Change the Jenkins logo using Jenkins CLI
             sh """
             curl -O 'http://localhost:8080/jnlpJars/jenkins-cli.jar'
-            java -jar jenkins-cli.jar -s http://localhost:8080/ -auth admin:az-token groovy = <<EOF
+            java -jar jenkins-cli.jar -s http://localhost:8080/ -auth admin:11e27f370e3546cf50d98204dccea0231d groovy = <<EOF
             import jenkins.model.*
             def instance = Jenkins.getInstance()
             instance.getDescriptorByType(jenkins.model.JenkinsLocationConfiguration.class).setLogo("${JENKINS_LOGO}")
