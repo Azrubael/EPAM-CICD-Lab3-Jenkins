@@ -45,6 +45,7 @@ pipeline {
               sh "echo apiToken=${apiToken}"
           }
       }
+    }
        
     stage('Change Jenkins Logo') {
       steps {
