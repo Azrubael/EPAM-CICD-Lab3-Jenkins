@@ -6,7 +6,7 @@ pipeline {
       ACCESS_PORT = ''
       IMAGE_TAG = ''
       JENKINS_LOGO = ''
-      USER='admin'
+      USER='jenkins'
     }
 
   options {
@@ -41,7 +41,7 @@ pipeline {
     stage('Retrieve API Token') {
       steps {
           script {
-              def apiToken = credentials("${USER}-api-token")
+              def apiToken = credentials("az-token")
               sh "echo apiToken=${apiToken}"
           }
       }
