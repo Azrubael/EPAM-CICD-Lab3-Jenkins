@@ -5,7 +5,7 @@ pipeline {
     agent { label "SILVER" }
 
     environment {
-        // Define the environment variables based on the branch
+        CONTAINER_PORT='3000'
         ACCESS_PORT = ''
         IMAGE_TAG = ''
     }
@@ -36,14 +36,12 @@ pipeline {
 
         stage('Fetch Code') {
             steps {
-                // Pull the Node.js project from the Git repository
                 git url: 'https://github.com/Azrubael/EPAM-CICD-Lab3-Jenkins.git', branch: env.GIT_BRANCH
             }
         }
 
         stage('Node Build') {
             steps {
-                // Build the Node.js project
                 sh '''
                     npm install
                     npm run build
@@ -60,7 +58,6 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                // Build the Docker image
                 sh "docker build -t ${IMAGE_TAG}:v1.0 ."
             }
         }
@@ -82,7 +79,7 @@ pipeline {
             steps {
                 // Run the Docker image in detached mode with port mapping
                 // Using --restart unless-stopped to minimize downtime
-                sh "docker run -d --restart unless-stopped --expose 3000 -p 3000:${ACCESS_PORT} ${IMAGE_TAG}:v1.0"
+                sh "docker run -d --restart unless-stopped -p ${ACCESS_PORT}:${CONTAINER_PORT} ${IMAGE_TAG}:v1.0"
             }
         }
     }
