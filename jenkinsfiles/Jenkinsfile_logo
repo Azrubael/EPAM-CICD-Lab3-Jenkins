@@ -40,10 +40,21 @@ pipeline {
     stage('Change Jenkins Logo') {
       steps {
         script {
-          def jenkinsInstance = Jenkins.getInstance()
-          def jenkinsBranding = jenkinsInstance.getDescriptorByType(jenkins.model.JenkinsLocationConfiguration)
-          jenkinsBranding.setLogo(JENKINS_LOGO)
-          jenkinsInstance.save()
+          // Check if the current branch is main or dev
+          if (env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'dev') {
+            // Change the Jenkins logo using Jenkins CLI
+            sh """
+            curl -O 'http://localhost:8080/jnlpJars/jenkins-cli.jar'
+            java -jar jenkins-cli.jar -s http://localhost:8080/ -auth admin:az-token groovy = <<EOF
+            import jenkins.model.*
+            def instance = Jenkins.getInstance()
+            instance.getDescriptorByType(jenkins.model.JenkinsLocationConfiguration.class).setLogo("${JENKINS_LOGO}")
+            instance.save()
+            EOF
+            """
+          } else {
+            echo "Skipping logo change for branch: ${env.GIT_BRANCH}"
+          }
         }
       }
     }
