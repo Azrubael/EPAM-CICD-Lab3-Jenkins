@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'SILVER' }
+    agent { label 'BuiltIn' }
 
     environment {
       // Define the environment variables based on the branch
@@ -38,11 +38,17 @@ pipeline {
       }
     }
 
+    stage('Retrieve API Token') {
+      steps {
+          script {
+              def apiToken = credentials("${USER}-api-token")
+              sh "echo apiToken=${apiToken}"
+          }
+      }
+       
     stage('Change Jenkins Logo') {
       steps {
         script {
-          def apiToken = credentials("${USER}-api-token")
-          sh "echo apiToken=$apiToken"
           // Check if the current branch is main or dev
           if (env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'dev') {
             // Change the Jenkins logo using Jenkins CLI
