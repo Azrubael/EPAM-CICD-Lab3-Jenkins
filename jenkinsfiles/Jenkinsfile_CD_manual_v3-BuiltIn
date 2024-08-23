@@ -26,6 +26,7 @@ pipeline {
                     } else {
                         error("Unsupported branch: ${env.GIT_BRANCH}.")
                     }
+                    IMAGE_NAME = "${IMAGE_TAG}:v1.0"
                 }
             }
         }
@@ -61,15 +62,25 @@ pipeline {
         stage('Manage Docker Containers and Images') {
             steps {
                 script {
-                    // Stop and remove any previously running containers
-                    def containerId = sh(script: "docker ps -q --filter 'ancestor=${IMAGE_TAG}:v1.0'", returnStdout: true).trim()
+                    // I'm not sure if it works
+                    def containerId = sh(script: "docker ps -q --filter ancestor=${IMAGE_NAME}", returnStdout: true).trim()
                     if (containerId) {
                         sh "docker stop ${containerId}"
                         sh "docker rm ${containerId}"
                     }
-                    sh "docker stop ${CONTAINER_TAG}"
-                    sh "docker rm ${CONTAINER_TAG}"
-                    sh "docker rmi ${IMAGE_TAG}:v1.0"
+
+                    def is_running = sh(script: "docker ps --filter name=${CONTAINER_TAG}"), returnStdout: true).trim()
+                    def is_container = sh(script: "docker ps -a --filter name=${CONTAINER_TAG}", returnStdout: true).trim()
+                    def is_image = sh(script: "docker images --filter reference=${IMAGE_NAME}", returnStdout: true).trim()
+                    if (is_running) {
+                        sh "docker stop ${CONTAINER_TAG}"
+                    }
+                    if (is_container) {
+                        sh "docker rm ${CONTAINER_TAG}"
+                    }
+                    if (is_image) {
+                        sh "docker rmi ${IMAGE_TAG}:v1.0"
+                    }
                 }
             }
         }
