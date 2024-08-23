@@ -1,0 +1,57 @@
+pipeline {
+    agent { label 'SILVER' }
+
+    environment {
+      // Define the environment variables based on the branch
+      ACCESS_PORT = ''
+      IMAGE_TAG = ''
+      JENKINS_LOGO = ''
+    }
+
+  options {
+    buildDiscarder logRotator(
+      artifactDaysToKeepStr: '', // Days to keep artifacts if needed
+      artifactNumToKeepStr: '5', // Keep the last 5 artifacts
+      daysToKeepStr: '',         // Days to keep builds if needed
+      numToKeepStr: '5'          // Keep the last 5 builds
+    )
+    disableConcurrentBuilds()    // Prevent concurrent builds
+  }
+
+  stages {
+    stage('Set Environment Variables') {
+      steps {
+        script {
+          if (env.GIT_BRANCH == 'main') {
+            ACCESS_PORT = '3000'
+            IMAGE_TAG = 'nodemain'
+            JENKINS_LOGO = 'icons/main.svg'
+          } else if (env.GIT_BRANCH == 'dev') {
+            ACCESS_PORT = '3001'
+            IMAGE_TAG = 'nodedev'
+            JENKINS_LOGO = 'icons/dev.svg'
+          } else {
+            error("Unsupported branch: ${env.GIT_BRANCH}.")
+          }
+        }
+      }
+    }
+
+    stage('Change Jenkins Logo') {
+      steps {
+        script {
+          def jenkinsInstance = Jenkins.getInstance()
+          def jenkinsBranding = jenkinsInstance.getDescriptorByType(jenkins.model.JenkinsLocationConfiguration)
+          jenkinsBranding.setLogo(JENKINS_LOGO)
+          jenkinsInstance.save()
+        }
+      }
+    }
+
+    stage('Hello') {
+      steps {
+        echo 'hello'
+      }
+    }
+  }
+}
