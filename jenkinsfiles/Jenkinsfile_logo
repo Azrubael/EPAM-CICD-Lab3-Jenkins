@@ -1,0 +1,78 @@
+pipeline {
+    agent { label 'BuiltIn' }
+
+    environment {
+      // Define the environment variables based on the branch
+      ACCESS_PORT = ''
+      IMAGE_TAG = ''
+      JENKINS_LOGO = ''
+      USER='jenkins'
+    }
+
+  options {
+    buildDiscarder logRotator(
+      artifactDaysToKeepStr: '', // Days to keep artifacts if needed
+      artifactNumToKeepStr: '5', // Keep the last 5 artifacts
+      daysToKeepStr: '',         // Days to keep builds if needed
+      numToKeepStr: '5'          // Keep the last 5 builds
+    )
+    disableConcurrentBuilds()    // Prevent concurrent builds
+  }
+
+  stages {
+    stage('Set Environment Variables') {
+      steps {
+        script {
+          if (env.GIT_BRANCH == 'main') {
+            ACCESS_PORT = '3000'
+            IMAGE_TAG = 'nodemain'
+            JENKINS_LOGO = 'icons/main.svg'
+          } else if (env.GIT_BRANCH == 'dev') {
+            ACCESS_PORT = '3001'
+            IMAGE_TAG = 'nodedev'
+            JENKINS_LOGO = 'icons/dev.svg'
+          } else {
+            error("Unsupported branch: ${env.GIT_BRANCH}.")
+          }
+        }
+      }
+    }
+
+    stage('Retrieve API Token') {
+      steps {
+          script {
+              def apiToken = credentials("az-token")
+              sh "echo apiToken=${apiToken}"
+          }
+      }
+    }
+       
+    stage('Change Jenkins Logo') {
+      steps {
+        script {
+          // Check if the current branch is main or dev
+          if (env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'dev') {
+            // Change the Jenkins logo using Jenkins CLI
+            sh """
+            curl --user $USER:$apiToken -O http://localhost:8080/jnlpJars/jenkins-cli.jar
+            java -jar jenkins-cli.jar -s http://localhost:8080/ -auth $USER:$apiToken groovy = <<EOF
+            import jenkins.model.*
+            def instance = Jenkins.getInstance()
+            instance.getDescriptorByType(jenkins.model.JenkinsLocationConfiguration.class).setLogo(${JENKINS_LOGO})
+            instance.save()
+            EOF
+            """
+          } else {
+            echo "Skipping logo change for branch: ${env.GIT_BRANCH}"
+          }
+        }
+      }
+    }
+
+    stage('Hello') {
+      steps {
+        echo 'hello'
+      }
+    }
+  }
+}
