@@ -27,10 +27,10 @@ pipeline {
             }
         }
 
-        stage('Status chek') {
+        stage('Status check') {
             steps {
-                echo "Status chek >>> ACCESS_PORT = ${ACCESS_PORT}"
-                echo "Status chek >>> IMAGE_TAG = ${IMAGE_TAG}"
+                echo "Status check >>> ACCESS_PORT = ${ACCESS_PORT}"
+                echo "Status check >>> IMAGE_TAG = ${IMAGE_TAG}"
             }
         }
 
