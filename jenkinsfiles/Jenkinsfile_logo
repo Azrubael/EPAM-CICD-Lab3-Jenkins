@@ -7,7 +7,6 @@ pipeline {
       IMAGE_TAG = ''
       JENKINS_LOGO = ''
       USER='admin'
-      API_TOKEN='11e27f370e3546cf50d98204dccea0231d'
     }
 
   options {
@@ -42,12 +41,14 @@ pipeline {
     stage('Change Jenkins Logo') {
       steps {
         script {
+          def apiToken = credentials("${USER}-api-token")
+          sh "echo >>>>>${apiToken}<<<<<"
           // Check if the current branch is main or dev
           if (env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'dev') {
             // Change the Jenkins logo using Jenkins CLI
             sh """
-            curl --user $USER:$API_TOKEN -O http://localhost:8080/jnlpJars/jenkins-cli.jar
-            java -jar jenkins-cli.jar -s http://localhost:8080/ -auth $USER:$API_TOKEN groovy = <<EOF
+            curl --user $USER:$apiToken -O http://localhost:8080/jnlpJars/jenkins-cli.jar
+            java -jar jenkins-cli.jar -s http://localhost:8080/ -auth $USER:$apiToken groovy = <<EOF
             import jenkins.model.*
             def instance = Jenkins.getInstance()
             instance.getDescriptorByType(jenkins.model.JenkinsLocationConfiguration.class).setLogo(${JENKINS_LOGO})
