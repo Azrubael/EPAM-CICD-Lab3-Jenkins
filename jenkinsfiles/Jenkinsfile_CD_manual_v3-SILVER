@@ -1,5 +1,4 @@
-// This is the properly tested variant of CD pipeline
-// to run it manually or by the schedule
+// The variant of CD pipeline to run it manually or by the schedule
 
 pipeline {
     agent { label "SILVER" }
