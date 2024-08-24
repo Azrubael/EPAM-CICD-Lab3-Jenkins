@@ -1,5 +1,13 @@
-// The of CD pipeline to run it manually or by the schedule on SILVER node
-// as the user 'silver'
+/*
+The properly tested variant of CD pipeline to run it manually
+or by the schedule on SILVER agent that deployed on:
+Ubuntu 18.04 with Jenkins, Docker, 1CPU and RAM2.5Gb
+N.B.: Added manually:
+    $ sudo visudo
+```
+silver ALL=(ALL) NOPASSWD: /usr/bin/docker
+```
+*/
 
 pipeline {
   agent { label 'SILVER' }
