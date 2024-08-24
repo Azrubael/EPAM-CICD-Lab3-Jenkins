@@ -1,0 +1,126 @@
+/*
+The properly tested variant of CD pipeline to run it manually
+or by the schedule on SILVER agent that deployed on:
+Ubuntu 18.04 with Jenkins, Docker, 1CPU and RAM2.5Gb
+N.B.: Added manually:
+    $ sudo visudo
+```
+silver ALL=(ALL) NOPASSWD: /usr/bin/docker
+```
+*/
+
+pipeline {
+  agent { label 'SILVER' }
+
+  environment {
+    CONTAINER_PORT='3000'
+    ACCESS_PORT = ''
+    IMAGE_TAG = ''
+    CONTAINER_TAG = ''
+  }
+
+  stages {
+    stage('Set Environment Variables') {
+      steps {
+        script {
+           if (env.GIT_BRANCH == 'main') {
+             ACCESS_PORT = '3000'
+             IMAGE_TAG = 'nodemain'
+             CONTAINER_TAG = 'app-main-container'
+           } else if (env.GIT_BRANCH == 'dev') {
+             ACCESS_PORT = '3001'
+             IMAGE_TAG = 'nodedev'
+             CONTAINER_TAG = 'app-dev-container'
+           } else {
+             error("Unsupported branch: ${env.GIT_BRANCH}.")
+           }
+           IMAGE_NAME = "${IMAGE_TAG}:v1.0"
+           echo "Status check >>> ACCESS_PORT = ${ACCESS_PORT}"
+           echo "Status check >>> IMAGE_TAG = ${IMAGE_TAG}"
+        }
+      }
+    }
+
+    stage('Fetch Code') {
+      steps {
+        git url: 'https://github.com/Azrubael/EPAM-CICD-Lab3-Jenkins.git', \
+        branch: env.GIT_BRANCH
+      }
+    }
+
+    stage('Build Node.js project') {
+      steps {
+        sh '''
+          npm install
+          npm run build
+        '''
+      }
+    }
+
+    stage('Test Node.js project') {
+      steps {
+        sh 'npm test'
+      }
+    }
+
+    stage('Manage Docker Containers and Images') {
+      steps {
+        script {        // Manage containers with special tags
+          def containerId = sh(script: "sudo docker ps -q --filter ancestor=${IMAGE_NAME}", returnStdout: true).trim()
+          if (containerId) {
+            echo "Stopping and removing running container: ${containerId}"
+            sh "sudo docker stop ${containerId}"
+            sh "sudo docker rm ${containerId}"
+          }
+
+          def is_running = sh(script: "sudo docker ps --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
+          if (is_running) {
+            echo "$is_running"
+            sh "sudo docker stop ${CONTAINER_TAG}"
+          }
+
+          def is_container = sh(script: "sudo docker ps -a --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
+          if (is_container) {
+            echo "Removing container: ${CONTAINER_TAG}"
+            sh "sudo docker rm ${CONTAINER_TAG}"
+          }
+
+          def is_image = sh(script: "sudo docker images --filter reference=${IMAGE_NAME} -q", returnStdout: true).trim()
+          if (is_image) {
+            echo "Removing image: ${IMAGE_NAME}"
+            sh "sudo docker rmi ${IMAGE_NAME}"
+          }
+        }
+      }
+    }
+
+    stage('Docker Image Build') {
+      steps {
+        sh "sudo docker build -t ${IMAGE_NAME} ."
+      }
+    }
+
+
+    stage('Docker Container Run') {
+      steps {
+        sh """
+          sudo docker run -d \
+          --restart unless-stopped \
+          --name ${CONTAINER_TAG} \
+          --publish ${ACCESS_PORT}:${CONTAINER_PORT} \
+          ${IMAGE_NAME}
+        """
+      }
+    }
+  }
+
+  post {
+    always {
+      echo 'Pipeline execution completed.'
+    }
+    failure {
+      echo 'Pipeline failed!'
+    }
+  }
+
+}
