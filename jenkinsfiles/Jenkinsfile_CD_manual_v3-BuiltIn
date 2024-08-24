@@ -8,6 +8,7 @@ pipeline {
         CONTAINER_PORT='3000'
         ACCESS_PORT = ''
         IMAGE_TAG = ''
+        CONTAINER_TAG = ''
     }
 
     stages {
@@ -17,12 +18,15 @@ pipeline {
                     if (env.GIT_BRANCH == 'main') {
                         ACCESS_PORT = '3000'
                         IMAGE_TAG = 'nodemain'
+                        CONTAINER_TAG = 'app-main-container'
                     } else if (env.GIT_BRANCH == 'dev') {
                         ACCESS_PORT = '3001'
                         IMAGE_TAG = 'nodedev'
+                        CONTAINER_TAG = 'app-dev-container'
                     } else {
                         error("Unsupported branch: ${env.GIT_BRANCH}.")
                     }
+                    IMAGE_NAME = "${IMAGE_TAG}:v1.0"
                 }
             }
         }
@@ -51,35 +55,53 @@ pipeline {
 
         stage('Test') {
             steps {
-                // Run tests for the Node.js project
                 sh 'npm test'
             }
         }
 
-        stage('Docker Build') {
-            steps {
-                sh "docker build -t ${IMAGE_TAG}:v1.0 ."
-            }
-        }
-
-        stage('Manage Docker Containers') {
+        stage('Manage Docker Containers and Images') {
             steps {
                 script {
-                    // Stop and remove any previously running containers
-                    def containerId = sh(script: "docker ps -q --filter 'ancestor=${IMAGE_TAG}:v1.0'", returnStdout: true).trim()
+                    def containerId = sh(script: "docker ps -q --filter ancestor=${IMAGE_NAME}", returnStdout: true).trim()
                     if (containerId) {
+                        echo "Stopping and removing running container: ${containerId}"
                         sh "docker stop ${containerId}"
                         sh "docker rm ${containerId}"
+                    }
+
+                    def is_running = sh(script: "docker ps --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
+                    if (is_running) {
+                        echo "$is_running"
+                        sh "docker stop ${CONTAINER_TAG}"
+                    }
+
+                    def is_container = sh(script: "docker ps -a --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
+                    if (is_container) {
+                        echo "Removing container: ${CONTAINER_TAG}"
+                        sh "docker rm ${CONTAINER_TAG}"
+                    }
+
+                    def is_image = sh(script: "docker images --filter reference=${IMAGE_NAME} -q", returnStdout: true).trim()
+                    if (is_image) {
+                        echo "Removing image: ${IMAGE_NAME}"
+                        sh "docker rmi ${IMAGE_NAME}"
                     }
                 }
             }
         }
 
+        stage('Docker Build') {
+            steps {
+                sh "docker build -t ${IMAGE_NAME} ."
+            }
+        }
+
+
         stage('Docker Run') {
             steps {
                 // Run the Docker image in detached mode with port mapping
                 // Using --restart unless-stopped to minimize downtime
-                sh "docker run -d --restart unless-stopped -p ${ACCESS_PORT}:${CONTAINER_PORT} ${IMAGE_TAG}:v1.0"
+                sh "docker run -d --restart unless-stopped --name ${CONTAINER_TAG} -p ${ACCESS_PORT}:${CONTAINER_PORT} ${IMAGE_NAME}"
             }
         }
     }
