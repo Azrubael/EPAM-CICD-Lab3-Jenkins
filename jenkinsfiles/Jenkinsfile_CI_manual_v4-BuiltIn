@@ -1,5 +1,5 @@
 // This is the properly tested variant of CD pipeline
-// to run it manually or by the schedule
+// to run it manually or by the schedule on Built-In Jenkins agent
 
 pipeline {
   agent { label 'BuiltIn' }
