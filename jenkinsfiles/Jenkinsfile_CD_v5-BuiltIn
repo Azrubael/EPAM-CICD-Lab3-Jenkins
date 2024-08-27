@@ -1,5 +1,14 @@
-// Continuous Delivery pipeline.
-// The part of the Continous Deployment pipeline.
+/*  === 2024-08-27 ===
+Continuous Delivery pipeline.
+The part of the Continous Deployment pipeline to run it
+manually or by the schedule on SILVER agent with paraneters:
+Ubuntu 18.04 with Jenkins 2.462.1, Docker, 2CPU and RAM4.0Gb
+N.B.: Added manually as 'vagrant' user:
+    $ sudo visudo
+```
+jenkins ALL=(ALL) NOPASSWD: /usr/bin/docker
+```
+*/
 
 pipeline {
   agent { label 'BuiltIn' }
@@ -100,25 +109,13 @@ pipeline {
       steps {
         withCredentials([usernamePassword(credentialsId: 'dockerID', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USER')]) {
             sh """
-            sudo docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_PASSWORD}"
+            echo "${DOCKERHUB_PASSWORD}" | sudo docker login -u "${DOCKERHUB_USER}" --password-stdin
             sudo docker push ${REMOTE_IMG}
             """
         }
       }
     }
 
-
-    // stage('Docker Container Run') {
-    //   steps {
-    //     sh """
-    //       docker run -d \
-    //       --restart unless-stopped \
-    //       --name ${CONTAINER_TAG} \
-    //       --publish ${ACCESS_PORT}:${DEPL_PORT} \
-    //       ${LOCAL_IMG}
-    //     """
-    //   }
-    // }
   }
 
   post {
