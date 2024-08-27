@@ -1,5 +1,6 @@
-# cicd-pipeline
-===============
+# cicd-pipeline 2024-08-27
+==========================
+with Jenkins version 2.462.1
 
 [0] - Prerequizites:
     - Lunix Ubuntu 18.04 or newer;

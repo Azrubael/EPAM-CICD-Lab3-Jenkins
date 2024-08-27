@@ -61,29 +61,29 @@ pipeline {
     stage('Manage Docker Containers and Images') {
       steps {
         script {        // Manage containers with special tags
-          def containerId = sh(script: "docker ps -q --filter ancestor=${LOCAL_IMG}", returnStdout: true).trim()
+          def containerId = sh(script: "sudo docker ps -q --filter ancestor=${LOCAL_IMG}", returnStdout: true).trim()
           if (containerId) {
             echo "Stopping and removing running container: ${containerId}"
-            sh "docker stop ${containerId}"
-            sh "docker rm ${containerId}"
+            sh "sudo docker stop ${containerId}"
+            sh "sudo docker rm ${containerId}"
           }
 
-          def is_running = sh(script: "docker ps --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
+          def is_running = sh(script: "sudo docker ps --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
           if (is_running) {
             echo "$is_running"
-            sh "docker stop ${CONTAINER_TAG}"
+            sh "sudo docker stop ${CONTAINER_TAG}"
           }
 
-          def is_container = sh(script: "docker ps -a --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
+          def is_container = sh(script: "sudo docker ps -a --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
           if (is_container) {
             echo "Removing container: ${CONTAINER_TAG}"
-            sh "docker rm ${CONTAINER_TAG}"
+            sh "sudo docker rm ${CONTAINER_TAG}"
           }
 
-          def is_image = sh(script: "docker images --filter reference=${LOCAL_IMG} -q", returnStdout: true).trim()
+          def is_image = sh(script: "sudo docker images --filter reference=${LOCAL_IMG} -q", returnStdout: true).trim()
           if (is_image) {
             echo "Removing image: ${LOCAL_IMG}"
-            sh "docker rmi ${LOCAL_IMG}"
+            sh "sudo docker rmi ${LOCAL_IMG}"
           }
         }
       }
@@ -91,8 +91,8 @@ pipeline {
 
     stage('Docker Image Build') {
       steps {
-        sh "docker build -t ${LOCAL_IMG} ."
-        sh "docker tag ${LOCAL_IMG} ${REMOTE_IMG}"
+        sh "sudo docker build -t ${LOCAL_IMG} ."
+        sh "sudo docker tag ${LOCAL_IMG} ${REMOTE_IMG}"
       }
     }
 
@@ -100,8 +100,8 @@ pipeline {
       steps {
         withCredentials([usernamePassword(credentialsId: 'dockerID', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USER')]) {
             sh """
-            docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_PASSWORD}"
-            docker push ${REMOTE_IMG}
+            sudo docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_PASSWORD}"
+            sudo docker push ${REMOTE_IMG}
             """
         }
       }
