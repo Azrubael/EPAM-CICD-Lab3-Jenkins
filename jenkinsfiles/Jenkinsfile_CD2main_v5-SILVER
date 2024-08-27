@@ -15,10 +15,12 @@ pipeline {
   stages {
     stage('Check the tags') {
       steps {
-        REMOTE_IMG = "${REMOTE_TAG}/${IMAGE_TAG}:v1.0"
-        echo "Status check >>> ACCESS_PORT = ${ACCESS_PORT}"
-        echo "Status check >>> LOCAL_IMG = ${IMAGE_TAG}"
-        echo "Status check >>> REMOTE_IMG = ${REMOTE_IMG}"
+        script {
+          REMOTE_IMG = "${REMOTE_TAG}/${IMAGE_TAG}:v1.0"
+          echo "Status check >>> ACCESS_PORT = ${ACCESS_PORT}"
+          echo "Status check >>> LOCAL_IMG = ${IMAGE_TAG}"
+          echo "Status check >>> REMOTE_IMG = ${REMOTE_IMG}"
+        }
       }
     }
 
@@ -42,10 +44,26 @@ pipeline {
             echo "Removing image: ${REMOTE_IMG}"
             sh "sudo docker rmi ${REMOTE_IMG}"
           }
-
-          sh "sudo docker pull ${REMOTE_IMG}"
         }
+      }
+    }
 
+    stage('Docker Image Pull') {
+      steps {
+        script {
+          def remoteImg = "${REMOTE_IMG}"
+          def success = false
+          while (!success) {
+            try {
+              sh "sudo docker pull ${remoteImg}"
+              echo "Docker image pulled successfully."
+              success = true
+            } catch (Exception e) {
+              echo "Failed to pull Docker image. Retrying in 3 seconds..."
+              sleep(3)
+            }
+          }
+        }
       }
     }
 

@@ -44,13 +44,29 @@ pipeline {
             echo "Removing image: ${REMOTE_IMG}"
             sh "sudo docker rmi ${REMOTE_IMG}"
           }
-
-          sh "sudo docker pull ${REMOTE_IMG}"
         }
-
       }
     }
 
+    stage('Docker Image Pull') {
+      steps {
+        script {
+          def remoteImg = "${REMOTE_IMG}"
+          def success = false
+          while (!success) {
+            try {
+              sh "sudo docker pull ${remoteImg}"
+              echo "Docker image pulled successfully."
+              success = true
+            } catch (Exception e) {
+              echo "Failed to pull Docker image. Retrying in 3 seconds..."
+              sleep(3)
+            }
+          }
+        }
+      }
+    }
+    
     stage('Docker Container Run') {
       steps {
         sh """
