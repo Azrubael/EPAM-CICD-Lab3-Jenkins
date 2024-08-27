@@ -15,10 +15,12 @@ pipeline {
   stages {
     stage('Check the tags') {
       steps {
-        REMOTE_IMG = "${REMOTE_TAG}/${IMAGE_TAG}:v1.0"
-        echo "Status check >>> ACCESS_PORT = ${ACCESS_PORT}"
-        echo "Status check >>> LOCAL_IMG = ${IMAGE_TAG}"
-        echo "Status check >>> REMOTE_IMG = ${REMOTE_IMG}"
+        script {
+          REMOTE_IMG = "${REMOTE_TAG}/${IMAGE_TAG}:v1.0"
+          echo "Status check >>> ACCESS_PORT = ${ACCESS_PORT}"
+          echo "Status check >>> LOCAL_IMG = ${IMAGE_TAG}"
+          echo "Status check >>> REMOTE_IMG = ${REMOTE_IMG}"
+        }
       }
     }
 

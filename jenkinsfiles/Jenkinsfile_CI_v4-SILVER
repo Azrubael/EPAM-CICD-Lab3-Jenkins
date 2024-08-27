@@ -1,5 +1,5 @@
 /*
-// The tested variant of Continous Delivery pipeline to run it
+The tested variant of Continous Delivery pipeline to run it
 manually or by the schedule on SILVER agent with paraneters:
 Ubuntu 18.04 with Jenkins, Docker, 1CPU and RAM2.5Gb
 N.B.: Added manually as 'vagrant' user:
