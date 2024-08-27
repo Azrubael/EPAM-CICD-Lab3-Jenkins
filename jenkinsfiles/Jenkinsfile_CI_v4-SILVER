@@ -13,7 +13,7 @@ pipeline {
   agent { label 'SILVER' }
 
   environment {
-    CONTAINER_PORT='3000'
+    DEPL_PORT='3000'
     ACCESS_PORT = ''
     IMAGE_TAG = ''
     CONTAINER_TAG = ''
@@ -107,7 +107,7 @@ pipeline {
           sudo docker run -d \
           --restart unless-stopped \
           --name ${CONTAINER_TAG} \
-          --publish ${ACCESS_PORT}:${CONTAINER_PORT} \
+          --publish ${ACCESS_PORT}:${DEPL_PORT} \
           ${IMAGE_NAME}
         """
       }

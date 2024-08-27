@@ -73,7 +73,7 @@ pipeline {
           sudo docker run -d \
           --restart unless-stopped \
           --name ${CONTAINER_TAG} \
-          --publish ${ACCESS_PORT}:${CONTAINER_PORT} \
+          --publish ${ACCESS_PORT}:${DEPL_PORT} \
           ${REMOTE_IMG}
         """
       }
