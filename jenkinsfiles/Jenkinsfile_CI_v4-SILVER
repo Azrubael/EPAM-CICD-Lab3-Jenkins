@@ -1,8 +1,8 @@
 /*
-The properly tested variant of CD pipeline to run it manually
-or by the schedule on SILVER agent that deployed on:
+The tested variant of Continous Delivery pipeline to run it
+manually or by the schedule on SILVER agent with paraneters:
 Ubuntu 18.04 with Jenkins, Docker, 1CPU and RAM2.5Gb
-N.B.: Added manually:
+N.B.: Added manually as 'vagrant' user:
     $ sudo visudo
 ```
 silver ALL=(ALL) NOPASSWD: /usr/bin/docker
@@ -23,20 +23,20 @@ pipeline {
     stage('Set Environment Variables') {
       steps {
         script {
-           if (env.GIT_BRANCH == 'main') {
-             ACCESS_PORT = '3000'
-             IMAGE_TAG = 'nodemain'
-             CONTAINER_TAG = 'app-main-container'
-           } else if (env.GIT_BRANCH == 'dev') {
-             ACCESS_PORT = '3001'
-             IMAGE_TAG = 'nodedev'
-             CONTAINER_TAG = 'app-dev-container'
-           } else {
-             error("Unsupported branch: ${env.GIT_BRANCH}.")
-           }
-           IMAGE_NAME = "${IMAGE_TAG}:v1.0"
-           echo "Status check >>> ACCESS_PORT = ${ACCESS_PORT}"
-           echo "Status check >>> IMAGE_TAG = ${IMAGE_TAG}"
+          if (env.GIT_BRANCH == 'main') {
+            ACCESS_PORT = '3000'
+            IMAGE_TAG = 'nodemain'
+            CONTAINER_TAG = 'app-main-container'
+          } else if (env.GIT_BRANCH == 'dev') {
+            ACCESS_PORT = '3001'
+            IMAGE_TAG = 'nodedev'
+            CONTAINER_TAG = 'app-dev-container'
+          } else {
+            error("Unsupported branch: ${env.GIT_BRANCH}.")
+          }
+          IMAGE_NAME = "${IMAGE_TAG}:v1.0"
+          echo "Status check >>> ACCESS_PORT = ${ACCESS_PORT}"
+          echo "Status check >>> IMAGE_TAG = ${IMAGE_TAG}"
         }
       }
     }

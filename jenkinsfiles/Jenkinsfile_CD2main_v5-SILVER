@@ -1,0 +1,84 @@
+// Deployment of the nodemain application
+// The part of the Continous Deployment pipeline.
+
+pipeline {
+  agent { label 'SILVER' }
+
+  environment {
+    DEPL_PORT='3000'
+    ACCESS_PORT = '3000'
+    IMAGE_TAG = 'nodemain'
+    CONTAINER_TAG = 'app-main-container'
+    REMOTE_TAG = 'azrubael'
+  }
+
+  stages {
+    stage('Check the tags') {
+      steps {
+        script {
+          REMOTE_IMG = "${REMOTE_TAG}/${IMAGE_TAG}:v1.0"
+          echo "Status check >>> ACCESS_PORT = ${ACCESS_PORT}"
+          echo "Status check >>> LOCAL_IMG = ${IMAGE_TAG}"
+          echo "Status check >>> REMOTE_IMG = ${REMOTE_IMG}"
+        }
+      }
+    }
+
+    stage('Manage Docker Containers and Images') {
+      steps {
+        script {
+          def is_running = sh(script: "sudo docker ps --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
+          if (is_running) {
+            echo "${CONTAINER_TAG} is running: $is_running"
+            sh "sudo docker stop ${CONTAINER_TAG}"
+          }
+
+          def is_container = sh(script: "sudo docker ps -a --filter name=${CONTAINER_TAG} -q", returnStdout: true).trim()
+          if (is_container) {
+            echo "Removing container: ${CONTAINER_TAG}"
+            sh "sudo docker rm ${CONTAINER_TAG}"
+          }
+
+          def is_image = sh(script: "sudo docker images --filter reference=${REMOTE_IMG} -q", returnStdout: true).trim()
+          if (is_image) {
+            echo "Removing image: ${REMOTE_IMG}"
+            sh "sudo docker rmi ${REMOTE_IMG}"
+          }
+        }
+      }
+    }
+
+    stage('Docker Image Pull') {
+      steps {
+        script {
+          def remoteImg = "${REMOTE_IMG}"
+          def success = false
+          while (!success) {
+            try {
+              sh "sudo docker pull ${remoteImg}"
+              echo "Docker image pulled successfully."
+              success = true
+            } catch (Exception e) {
+              echo "Failed to pull Docker image. Retrying in 3 seconds..."
+              sleep(3)
+            }
+          }
+        }
+      }
+    }
+
+    stage('Docker Container Run') {
+      steps {
+        sh """
+          sudo docker run -d \
+          --restart unless-stopped \
+          --name ${CONTAINER_TAG} \
+          --publish ${ACCESS_PORT}:${CONTAINER_PORT} \
+          ${REMOTE_IMG}
+        """
+      }
+    }
+  
+  }
+
+}
